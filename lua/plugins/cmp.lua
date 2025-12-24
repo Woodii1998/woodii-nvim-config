@@ -1,37 +1,39 @@
 return {
-  "hrsh7th/nvim-cmp",
-  opts = function(_, opts)
-    local cmp = require("cmp")
-    local luasnip = require("luasnip")
-
-    opts.mapping = vim.tbl_extend("force", opts.mapping or {}, {
-      -- 回车只换行，不负责补全
-      ["<CR>"] = cmp.mapping(function(fallback)
-        fallback()
-      end, { "i", "s" }),
-
-      -- Tab：优先确认补全，其次跳 snippet，否则插入 Tab
-      ["<Tab>"] = cmp.mapping(function(fallback)
-        if cmp.visible() then
-          cmp.confirm({ select = true }) -- 用 Tab 确认补全
-        elseif luasnip.expand_or_jumpable() then
-          luasnip.expand_or_jump()
-        else
-          fallback() -- 真正的 Tab
-        end
-      end, { "i", "s" }),
-
-      ["<S-Tab>"] = cmp.mapping(function(fallback)
-        if cmp.visible() then
-          cmp.select_prev_item()
-        elseif luasnip.jumpable(-1) then
-          luasnip.jump(-1)
-        else
-          fallback()
-        end
-      end, { "i", "s" }),
-    })
-
-    return opts
-  end,
+  {
+    "saghen/blink.cmp",
+    opts = {
+      keymap = {
+        -- 使用 super-tab preset，它已经实现了：Tab 确认补全或跳转 snippet
+        preset = "super-tab",
+        -- 回车只换行，不负责补全（关闭补全菜单后执行默认换行）
+        ["<CR>"] = {
+          function(cmp)
+            if cmp.is_visible() then
+              cmp.hide() -- 关闭补全菜单
+            end
+            -- 返回 nil 让 fallback 执行默认换行
+          end,
+          "fallback",
+        },
+        -- Control+J：向下选择补全项
+        ["<C-j>"] = {
+          function(cmp)
+            if cmp.is_visible() then
+              return cmp.select_next()
+            end
+          end,
+          "fallback",
+        },
+        -- Control+K：向上选择补全项
+        ["<C-k>"] = {
+          function(cmp)
+            if cmp.is_visible() then
+              return cmp.select_prev()
+            end
+          end,
+          "fallback",
+        },
+      },
+    },
+  },
 }
